@@ -6,36 +6,29 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <fcntl.h>      //flag uri sokceturi
 
 #include <vector>
 
-#define PORT 53
+#define APPLICATION_PORT 1234
+#define APPLICATION_IP "127.0.0.1"  //loopback adress
 
 class Server
 {
 private:
 
     static Server* m_ptr;
-    Server(const char* ip_address);
+    Server();
     Server(const Server&obj){};
     ~Server(){};
 
     short m_port;
-    int m_listen_sock;
+
+    int m_sock;
     struct sockaddr_in m_addr;
 
-    std::vector<int> m_client_socks;
-
     int create_sock();
-    void initialize_addr(const char*ip_address);
-    void set_sock_non_blocking(int &sock);
-    void bind_sock(int sock,const sockaddr_in &m_addr);
-    void listen(int &sock);
-
-    void init_master(fd_set&master);
-    void handle_incoming_connections(fd_set& master);
-    void handle_client_data(const fd_set&master);
+    void initialize_addr(struct sockaddr_in& addr,const char *ip_address,const int& port);
+    void bind_sock(int &sock, const sockaddr_in &addr);
 
 public:
     static Server&get_instance();

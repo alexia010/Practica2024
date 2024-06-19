@@ -26,7 +26,7 @@ void Client::connect(const char *ip_dest)
     m_addr.sin_family=AF_INET;             //IPv4
     m_addr.sin_port=htons(PORT);           //port
     
-    if(inet_pton(AF_INET,ip_dest,&m_addr.sin_addr)<0)
+    if(inet_pton(AF_INET,ip_dest,&m_addr.sin_addr)<=0)      // 0- ip invalid -1 eroare 1 succes
     {
         std::cerr<<"Error connection";
         exit(1);
@@ -36,5 +36,5 @@ void Client::connect(const char *ip_dest)
 
 void Client::send_message(const char *msg)
 {
-    sendto(m_sock_fd, (const char *)"hello", strlen("hello"),MSG_CONFIRM, (const struct sockaddr *) &m_addr,sizeof(m_addr));
+    sendto(m_sock_fd, msg, strlen(msg),MSG_CONFIRM, (const struct sockaddr *) &m_addr,sizeof(m_addr));
 }

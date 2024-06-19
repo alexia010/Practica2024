@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-#define PORT 53
+#define PORT 1234
 
 class Client
 {

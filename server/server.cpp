@@ -2,12 +2,11 @@
 
 Server*Server::m_ptr=nullptr;
 
-Server::Server(const char* ip_address):m_port(PORT)
+Server::Server():m_port(APPLICATION_PORT)
 {
-    m_listen_sock=create_sock();
-    set_sock_non_blocking(m_listen_sock);
-    bind_sock(m_listen_sock,m_addr);
-    //listen(m_listen_sock);
+    m_sock=create_sock();
+    initialize_addr(m_addr,APPLICATION_IP,m_port);
+    bind_sock(m_sock,m_addr);
 }
 
 
@@ -17,70 +16,35 @@ int Server::create_sock()
 
     if(sock<0)
     {
-        std::cerr<<"Failed creating socket";
-        exit(EXIT_FAILURE);
+        perror("socket creation failed");
+        exit(1);
     }
 
     return sock;
 }
 
-void Server::initialize_addr(const char *ip_address)
+void Server::initialize_addr(struct sockaddr_in& addr,const char *ip_address,const int& port)
 {
-    memset(&m_addr, 0, sizeof(m_addr));
-    m_addr.sin_family = AF_INET;
-    m_addr.sin_addr.s_addr = inet_addr(ip_address); 
-    m_addr.sin_port = htons(m_port);
+    memset(&addr, 0, sizeof(addr));       
+    addr.sin_family = AF_INET;                //Ipv4
+    addr.sin_addr.s_addr = inet_addr(ip_address);     //test ->binar
+    addr.sin_port = htons(port);
 }
 
-
-void Server::set_sock_non_blocking(int &sock)
+void Server::bind_sock(int &sock, const sockaddr_in &addr)
 {
-    int flags=fcntl(sock,F_GETFL,0);
-
-    if(flags== -1)
+    if(bind(sock,(const struct sockaddr*)&addr,sizeof(addr))<0)
     {
-        std::cerr<<"Failed getting listen sock flags";
-        return;
-    }
-
-    flags|=O_NONBLOCK;
-
-    if( fcntl(sock,F_SETFL,flags)<0)
-    {
-        std::cerr<<"Failed adding non block flag";
-        return;
-    }
-}
-
-void Server::bind_sock(int sock, const sockaddr_in &m_addr)
-{
-     if (bind(sock, (const struct sockaddr*)&m_addr, sizeof(m_addr)) < 0) {
-        std::cerr << "Bind failed" << std::endl;
-        close(sock);
-        exit(EXIT_FAILURE);
-    }
-}
-
-void Server::listen(int &sock)
-{
-    if(::listen(sock,SOMAXCONN)<0)
-    {
-        std::cerr<<"Listen failed.\n";
-        close(sock);
+        perror("Error on bind");
+        close(m_sock);
         exit(1);
-    }
-}
-
-void Server::init_master(fd_set &master)
-{
-    FD_ZERO(&master);
-    FD_SET(m_listen_sock,&master);
+   }
 }
 
 Server &Server::get_instance()
 {
     if(m_ptr==nullptr)
-        m_ptr=new Server((const char*)"127.0.0.1");
+        m_ptr=new Server();
 
     return *m_ptr;
 }
@@ -96,52 +60,26 @@ void Server::destroy_instance()
 
 void Server::run()
 {
-    fd_set master;
-    init_master(master);
-
-    while(1)
-    {   
-        handle_incoming_connections(master);
-        handle_client_data(master);
-    }
-}
-
-void Server::handle_incoming_connections(fd_set &master)
-{
-    int new_client_sock=accept(m_listen_sock,nullptr,nullptr);
-
-    if(new_client_sock!=-1)
-    {
-        FD_SET(new_client_sock,&master);
-        m_client_socks.push_back(new_client_sock);
-
-        std::cout<<"Client connected!\n";
-
-    }
-}
-
-void Server::handle_client_data(const fd_set &master)
-{
-    for(int sock:m_client_socks)
-    {
-        if(FD_ISSET(sock,&master))
-        {
-            char buffer[1024];
-
-            struct sockaddr_in client_addr;
-            socklen_t addr_len=sizeof(client_addr);
+  char buffer[1024];
+  struct sockaddr_in client_addr;
+  socklen_t addr_len = sizeof(client_addr);
     
-            int recv_bytes=::recvfrom(sock,buffer,1023,0,(struct sockaddr*)&client_addr,&addr_len);
+    while (1)
+    {
+        int recv_bytes = recvfrom(m_sock, buffer, 1023, 0, (struct sockaddr*)&client_addr, &addr_len);
+        
+        if (recv_bytes > 0)
+        {
+            buffer[recv_bytes] = '\0';
 
-            if(recv_bytes<=0)
-            {
-                continue;
-            }
-            else
-            {
-                buffer[recv_bytes]='\0';
-                std::cout<<buffer;
-            }
+            std::cout << "Client msg: " << buffer << std::endl;
+
+            //sendto(m_sock, buffer, strlen(buffer), 0, (struct sockaddr*)&client_addr, addr_len);
         }
+
     }
+
 }
+
+
+

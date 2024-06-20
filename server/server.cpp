@@ -7,6 +7,11 @@ Server::Server():m_port(APPLICATION_PORT)
     m_sock=create_sock();
     initialize_addr(m_addr,APPLICATION_IP,m_port);
     bind_sock(m_sock,m_addr);
+
+    m_sock=create_sock();
+    initialize_addr(m_dns_addr,m_dns_servers[0].c_str(),53);
+
+    get_dns_servers();
 }
 
 
@@ -41,6 +46,35 @@ void Server::bind_sock(int &sock, const sockaddr_in &addr)
    }
 }
 
+void Server::get_dns_servers()
+{
+    std::ifstream p_file("/etc/resolv.conf");
+
+    if(!p_file.is_open())
+    {
+        std::cerr<<"Eroare la deschiderea fisierului\n";
+        exit(1);
+    }
+
+    std::string line;
+
+    while(getline(p_file,line))
+    {
+        if(line[0]!='#')
+        {
+            add_dns_ip(line);
+        }
+    }
+}
+
+void Server::add_dns_ip(const std::string &line)
+{
+    std::istringstream iss(line);
+    std::string wrd1,wrd2;
+    iss>>wrd1>>wrd2;
+    m_dns_servers.push_back(wrd2);
+}
+
 Server &Server::get_instance()
 {
     if(m_ptr==nullptr)
@@ -73,6 +107,8 @@ void Server::run()
             buffer[recv_bytes] = '\0';
 
             std::cout << "Client msg: " << buffer << std::endl;
+
+            
 
             //sendto(m_sock, buffer, strlen(buffer), 0, (struct sockaddr*)&client_addr, addr_len);
         }

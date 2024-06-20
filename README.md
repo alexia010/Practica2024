@@ -41,3 +41,7 @@ Am reconsiderat implementarea realizata in ziua anterioara, renuntand la file de
 >[ sursa_1](https://mislove.org/teaching/cs4700/spring11/handouts/project1-primer.pdf) -  formatul packetului DNS 
  
  >[ sursa_2 ](https://www.baeldung.com/linux/etc-resolv-conf-file) - rolul si configurarea fisierului /etc/resolv.conf în sistemele Linux. Acesta contine informatii despre serverele DNS utilizate pentru traducerea numelor de domenii in adrese IP. Prin intermediul directivei nameserver, fisierul specifica adresele IP ale serverelor DNS pe care sistemul le utilizeaza.
+
+ ## 20.09.2024
+
+ Realizarea claselor care definesc pachetul DNS si componentele sale.Am definit clase pentru header-ul DNS, intrebari (queries), inregistrari de raspuns (answers),autoritati si pentru inregistrari suplimentare.Totodata, am extras si adresele IP ale serverelor DNS folosite local.

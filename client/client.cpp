@@ -34,6 +34,40 @@ void Client::connect(const char *ip_dest)
 
 }
 
+void Client::send_request()
+{
+    std::cout<<"Enter hostname to lookup: ";
+
+    std::string hostname;
+    std::cin>>hostname;
+    std::cout<<"Record type:\n";
+    dns::print_record_type();
+
+    std::string type;
+    std::cout<<"Enter record type:\n";
+    std::cin>>type;
+
+    dns::dns_record_type r_type=dns::check_type(type);
+
+    CDNS_request request;
+    request.set_header(1,0,0,0,0,0,0,0,0,0,1,0,0,0);
+
+    dns::query*q=new dns::query(hostname,dns::enum_to_int(r_type),1); //1 internet
+    request.add_query(q);
+
+    std::cout<<"Sending packet:\n";
+
+    int size=0;
+     if( sendto(m_sock_fd,(char*)request.get_packet_data(size),size,0,(struct sockaddr*)&m_addr,sizeof(m_addr)) < 0)
+    {
+        perror("sendto failed");
+        exit(1);
+    }
+ 
+    
+
+}
+
 void Client::send_message(const char *msg)
 {
     sendto(m_sock_fd, msg, strlen(msg),MSG_CONFIRM, (const struct sockaddr *) &m_addr,sizeof(m_addr));

@@ -8,10 +8,9 @@ Server::Server():m_port(APPLICATION_PORT)
     initialize_addr(m_addr,APPLICATION_IP,m_port);
     bind_sock(m_sock,m_addr);
 
+    get_dns_servers();
     m_sock=create_sock();
     initialize_addr(m_dns_addr,m_dns_servers[0].c_str(),53);
-
-    get_dns_servers();
 }
 
 
@@ -107,7 +106,7 @@ void Server::run()
             buffer[recv_bytes] = '\0';
 
             std::cout << "Client msg: " << buffer << std::endl;
-
+            
             
 
             //sendto(m_sock, buffer, strlen(buffer), 0, (struct sockaddr*)&client_addr, addr_len);

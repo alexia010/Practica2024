@@ -1,8 +1,24 @@
 #include <iostream>
 #include <string>
+#include <unistd.h>     //getpid()
+#include <arpa/inet.h>  //htons
 
 namespace dns
 {
+    typedef enum dns_record_type{
+    A = 1,     // IPv4 address
+    NS = 2,    // Nameserver
+    CNAME = 5, // Canonical name
+    SOA = 6,   // Start of authority zone
+    PTR = 12,  // Domain name pointer
+    MX = 15,   // Mail server
+    NONE
+    } ;
+
+    void print_record_type();
+    dns_record_type get_record_type(std::string t_type);
+    dns_record_type check_type(std::string type);
+    int enum_to_int(const dns_record_type &type){return static_cast<int>(type);};
 
     class DNS_header
     { 
@@ -32,7 +48,7 @@ namespace dns
         unsigned short add_count; // number of resource entries -> informatii suplimentare (ex:  adrese IP suplimentare asociate cu un nume de domeniu )
     public:
         DNS_header();
-        void set_all(unsigned short id, bool rd, bool tc, bool aa, unsigned char opcode, bool qr, unsigned char rcode,
+        void set_all(bool rd, bool tc, bool aa, unsigned char opcode, bool qr, unsigned char rcode,
                 bool cd, bool ad, bool z, bool ra, unsigned short q_count, unsigned short ans_count,
                 unsigned short auth_count, unsigned short add_count);
 
@@ -76,10 +92,19 @@ namespace dns
 
     class query
     {
-        std::string name;
+        std::string domain_name;
         question *qst;
+
+        void change_to_dns_name_format();
     public:
         query():qst(nullptr){};
+        query(std::string name,unsigned short q_type, unsigned short q_class);
+        void set_domain_name(std::string name);
+        void set_question( unsigned short q_type,unsigned short q_class);
+        void get_data();
+        ~query();
+    
     };
+
 
 };

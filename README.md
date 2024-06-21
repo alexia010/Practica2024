@@ -45,3 +45,7 @@ Am reconsiderat implementarea realizata in ziua anterioara, renuntand la file de
  ## 20.09.2024
 
  Realizarea claselor care definesc pachetul DNS si componentele sale.Am definit clase pentru header-ul DNS, intrebari (queries), inregistrari de raspuns (answers),autoritati si pentru inregistrari suplimentare.Totodata, am extras si adresele IP ale serverelor DNS folosite local.
+
+ ## 21.09.2024
+
+ Adaugarea functionalitatilor necesare în cadrul claselor care definesc pachetul DNS. Definirea unui enum pentru diferitele tipuri de înregistrări DNS, cum ar fi A, NS, CNAME, SOA, PTR și MX.

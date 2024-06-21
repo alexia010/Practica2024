@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include "CDNS_request.h"
 
 #define PORT 1234
 
@@ -18,11 +19,11 @@ private:
     
     struct sockaddr_in m_addr;
 
-
+    void send_message(const char*msg);
 public:
     Client();
     ~Client();
 
     void connect(const char*ip_dest);
-    void send_message(const char*msg);
+    void send_request();
 };

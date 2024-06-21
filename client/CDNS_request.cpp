@@ -1,4 +1,5 @@
 #include "CDNS_request.h"
+#include <cstring>
 
 CDNS_request::~CDNS_request()
 {
@@ -7,4 +8,36 @@ CDNS_request::~CDNS_request()
         delete header;
         header=nullptr;
     }
+}
+
+char *CDNS_request::get_packet_data(int &size)
+{
+    static char buffer[65536];  //max dns packet size
+    char*ptr=buffer;
+
+    size=0;
+
+    std::memcpy(ptr, header, sizeof(dns::DNS_header));
+    ptr += sizeof(dns::DNS_header);
+    size+=sizeof(dns::DNS_header);
+
+     for (const auto& q : queries)
+    {
+        std::memcpy(ptr, q, sizeof(dns::query));
+        ptr += sizeof(dns::query);
+        size+=sizeof(dns::query);
+    }
+
+    return buffer;
+}
+
+void CDNS_request::set_header(bool rd, bool tc, bool aa, unsigned char opcode, bool qr, unsigned char rcode, bool cd, bool ad, bool z, bool ra, unsigned short q_count, unsigned short ans_count, unsigned short auth_count, unsigned short add_count)
+{
+    if(header==nullptr)
+    {
+        header=new dns::DNS_header;
+    }
+
+    header->set_all(rd,tc,aa,opcode,qr,rcode,cd,ad,z,ra,q_count,ans_count,auth_count,add_count);
+
 }

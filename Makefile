@@ -1,6 +1,6 @@
 # Define compiler and flags
 CXX = g++
-CXXFLAGS = -Wall -std=c++11 -g
+CXXFLAGS = -Wall -std=c++17 -g
 
 # Define the target executables
 TARGET_SERVER = server/main_server

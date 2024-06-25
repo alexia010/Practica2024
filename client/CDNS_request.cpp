@@ -10,10 +10,12 @@ CDNS_request::~CDNS_request()
     }
 }
 
-char *CDNS_request::get_packet_data(int &size)
+void CDNS_request::get_packet_data(char*&ptr,int &size)
 {
     static char buffer[65536];  //max dns packet size
-    char*ptr=buffer;
+
+    std::memset(buffer, 0, sizeof(buffer));
+   ptr=buffer;
 
     size=0;
 
@@ -23,12 +25,10 @@ char *CDNS_request::get_packet_data(int &size)
 
      for (const auto& q : queries)
     {
-        std::memcpy(ptr, q, sizeof(dns::query));
-        ptr += sizeof(dns::query);
-        size+=sizeof(dns::query);
+        q->get_data(ptr,size);
     }
 
-    return buffer;
+    ptr=buffer;
 }
 
 void CDNS_request::set_header(bool rd, bool tc, bool aa, unsigned char opcode, bool qr, unsigned char rcode, bool cd, bool ad, bool z, bool ra, unsigned short q_count, unsigned short ans_count, unsigned short auth_count, unsigned short add_count)

@@ -1,4 +1,5 @@
 #include "DNS_parts.h"
+#include <cstring>
 
 dns::DNS_header::DNS_header()
 {
@@ -43,6 +44,17 @@ void dns::question::set_all(unsigned short q_type, unsigned short q_class)
 {
     this->q_type=q_type;
     this->q_class=htons(q_class);
+}
+
+void dns::question::get_data(char *ptr, int &size)
+{
+    std::memcpy(ptr,&q_type,sizeof(q_type));
+    size+=sizeof(q_type);
+    ptr+=sizeof(q_type);
+    std::memcpy(ptr,&q_class,sizeof(q_class));
+    size+=sizeof(q_class);
+    ptr+=sizeof(q_class);
+
 }
 
 void dns::print_record_type()
@@ -102,7 +114,7 @@ void dns::query::change_to_dns_name_format()
 
     int start=0;
     int pos;
-    while((pos=domain_name.find('.',start)!=std::string::npos))
+    while((pos=domain_name.find('.',start))!=std::string::npos)
     {
         unsigned char length=pos-start;
         name+=length;
@@ -134,6 +146,14 @@ void dns::query::set_question(unsigned short q_type, unsigned short q_class)
     }
 
     qst->set_all(q_type,q_class);
+}
+
+void dns::query::get_data(char* ptr,int &size)
+{
+    std::memcpy(ptr,domain_name.c_str(),domain_name.size()+1);
+    size+=domain_name.size()+1;
+    ptr+=domain_name.size()+1;
+    qst->get_data(ptr,size);
 }
 
 dns::query::~query()

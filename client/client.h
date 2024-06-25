@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
@@ -16,14 +17,17 @@ private:
 
     short m_port;
     int m_sock_fd;
-    
     struct sockaddr_in m_addr;
 
-    void send_message(const char*msg);
+    char m_dns_response[65536];
+
+  
 public:
     Client();
     ~Client();
 
     void connect(const char*ip_dest);
     void send_request();
+
+    void send_message(const char*msg);
 };

@@ -1,16 +1,22 @@
 #include "server.h"
 
+
 Server*Server::m_ptr=nullptr;
 
 Server::Server():m_port(APPLICATION_PORT)
 {
+
     m_sock=create_sock();
     initialize_addr(m_addr,APPLICATION_IP,m_port);
     bind_sock(m_sock,m_addr);
 
     get_dns_servers();
-    m_sock=create_sock();
-    initialize_addr(m_dns_addr,m_dns_servers[0].c_str(),53);
+    m_dns_sock=create_sock();
+
+    std::string google="Google Public DNS";
+    auto it = m_dns_servers.find(google);
+    initialize_addr(m_dns_addr,it->second.c_str(),53);
+
 }
 
 
@@ -29,7 +35,7 @@ int Server::create_sock()
 
 void Server::initialize_addr(struct sockaddr_in& addr,const char *ip_address,const int& port)
 {
-    memset(&addr, 0, sizeof(addr));       
+    memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;                //Ipv4
     addr.sin_addr.s_addr = inet_addr(ip_address);     //test ->binar
     addr.sin_port = htons(port);
@@ -47,31 +53,61 @@ void Server::bind_sock(int &sock, const sockaddr_in &addr)
 
 void Server::get_dns_servers()
 {
-    std::ifstream p_file("/etc/resolv.conf");
-
+     std::ifstream p_file("dns_servers.txt");
     if(!p_file.is_open())
     {
         std::cerr<<"Eroare la deschiderea fisierului\n";
         exit(1);
     }
-
     std::string line;
-
     while(getline(p_file,line))
     {
-        if(line[0]!='#')
-        {
-            add_dns_ip(line);
-        }
+        add_dns_server_in_map(line);
     }
+
+    p_file.close();
 }
 
-void Server::add_dns_ip(const std::string &line)
+void Server::add_dns_server_in_map(std::string line)
 {
     std::istringstream iss(line);
-    std::string wrd1,wrd2;
-    iss>>wrd1>>wrd2;
-    m_dns_servers.push_back(wrd2);
+    std::string ip,name;
+
+    if(iss>>ip&&std::getline(iss,name))
+    {
+        name=name.substr(1);
+        m_dns_servers[name]=ip;
+    }
+
+}
+
+void Server::query_dns_server(char *&ptr, int &size,const sockaddr_in & client_addr,const socklen_t & addr_len)
+{
+    int sent_bytes=sendto(m_dns_sock,ptr,size,0,(struct sockaddr*)&m_dns_addr,sizeof(m_dns_addr));
+    if(sent_bytes < 0)
+    {
+        perror("sendto failed");
+    }
+    
+    std::cout<<"Query sent to dns server...\n";
+    
+    std::cout<<"Receiving answear...\n";
+
+    socklen_t len=sizeof(m_addr);
+    int recv_bytes=recvfrom (m_dns_sock,(char*)m_dns_response, 65536 , 0 , (struct sockaddr*)&m_dns_addr , &len );
+    if(recv_bytes< 0)
+    {
+        perror("recvfrom failed");
+    }
+
+    ptr=m_dns_response;
+
+    sent_bytes=sendto(m_sock,ptr,recv_bytes,0,(struct sockaddr*)&client_addr,sizeof(client_addr));
+
+    if(sent_bytes < 0)
+    {
+        perror("sendto failed");
+    }
 }
 
 Server &Server::get_instance()
@@ -93,21 +129,27 @@ void Server::destroy_instance()
 
 void Server::run()
 {
-  char buffer[1024];
+  char buffer[65536];
   struct sockaddr_in client_addr;
   socklen_t addr_len = sizeof(client_addr);
+
     
     while (1)
     {
-        int recv_bytes = recvfrom(m_sock, buffer, 1023, 0, (struct sockaddr*)&client_addr, &addr_len);
+        int recv_bytes = recvfrom(m_sock, (char*)buffer, 65535, MSG_WAITALL, (struct sockaddr*)&client_addr, &addr_len);
         
         if (recv_bytes > 0)
         {
             buffer[recv_bytes] = '\0';
 
             std::cout << "Client msg: " << buffer << std::endl;
-            
-            
+
+            char*ptr=nullptr;
+            ptr=buffer;
+            int size=recv_bytes;
+
+            query_dns_server(ptr,size,client_addr,addr_len);
+
 
             //sendto(m_sock, buffer, strlen(buffer), 0, (struct sockaddr*)&client_addr, addr_len);
         }

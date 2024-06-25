@@ -1,3 +1,5 @@
+
+#pragma once 
 #include <iostream>
 #include <string>
 #include <unistd.h>     //getpid()
@@ -5,7 +7,7 @@
 
 namespace dns
 {
-    typedef enum dns_record_type{
+    enum dns_record_type{
     A = 1,     // IPv4 address
     NS = 2,    // Nameserver
     CNAME = 5, // Canonical name
@@ -18,7 +20,7 @@ namespace dns
     void print_record_type();
     dns_record_type get_record_type(std::string t_type);
     dns_record_type check_type(std::string type);
-    int enum_to_int(const dns_record_type &type){return static_cast<int>(type);};
+    inline int enum_to_int(const dns_record_type &type){return static_cast<int>(type);};
 
     class DNS_header
     { 
@@ -66,6 +68,7 @@ namespace dns
     public:
         question():q_type(0),q_class(0){};
         void set_all(unsigned short q_type, unsigned short q_class);
+        void get_data(char*ptr,int&size);
     };
 
     #pragma pack(push,1);   //evitare padding
@@ -101,7 +104,7 @@ namespace dns
         query(std::string name,unsigned short q_type, unsigned short q_class);
         void set_domain_name(std::string name);
         void set_question( unsigned short q_type,unsigned short q_class);
-        void get_data();
+        void get_data(char*ptr,int &size);
         ~query();
     
     };

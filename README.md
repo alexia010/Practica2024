@@ -24,7 +24,7 @@ DNS look-up using sockets
 modify README
 
 
-## 18.09.2024
+## 18.06.2024
 
 Realizarea primei parti a conexiunii client-server pentru aplicatia de DNS lookup. Am implementat serverul astfel incat sa poata accepta si gestiona multiple cereri de la clienti. Am folosit file descriptori si un vector de socket-uri pentru clienti, impreuna cu un socket de ascultare configurat in mod non-blocking pentru a permite gestionareamai multor conexiuni simultane. 
 
@@ -32,7 +32,7 @@ Pentru a gestiona eficient multiple conexiuni simultane, am configurat socket-ul
 
 Totodata, am configurat spatiul de lucru in Visual Studio Code, creand fisierele tasks.json si launch.json pentru automatizarea procesului de build si debugging, si un Makefile la nivel de proiect.
 
-## 19.09.2024
+## 19.06.2024
 
 Am reconsiderat implementarea realizata in ziua anterioara, renuntand la file descriptori si vectorul de socketuri din cadrul aplicatiei server, realizand doar o conexiune simpla UDP intre client si server 
 
@@ -42,10 +42,14 @@ Am reconsiderat implementarea realizata in ziua anterioara, renuntand la file de
  
  >[ sursa_2 ](https://www.baeldung.com/linux/etc-resolv-conf-file) - rolul si configurarea fisierului /etc/resolv.conf în sistemele Linux. Acesta contine informatii despre serverele DNS utilizate pentru traducerea numelor de domenii in adrese IP. Prin intermediul directivei nameserver, fisierul specifica adresele IP ale serverelor DNS pe care sistemul le utilizeaza.
 
- ## 20.09.2024
+ ## 20.06.2024
 
  Realizarea claselor care definesc pachetul DNS si componentele sale.Am definit clase pentru header-ul DNS, intrebari (queries), inregistrari de raspuns (answers),autoritati si pentru inregistrari suplimentare.Totodata, am extras si adresele IP ale serverelor DNS folosite local.
 
- ## 21.09.2024
+ ## 21.06.2024
 
  Adaugarea functionalitatilor necesare în cadrul claselor care definesc pachetul DNS. Definirea unui enum pentru diferitele tipuri de înregistrări DNS, cum ar fi A, NS, CNAME, SOA, PTR și MX.
+
+ ## 25.06.2024
+
+Am renuntat la utilizarea serverelor DNS locale, stocate in cadrul fisierului /etc/resolv.conf, optand pentru serverele DNS open source, ale caror adrese IP si nume sunt stocate in fisierul *dns_servers.txt*. Am finalizat implementarea trimiterii cererii DNS de la client la server si, ulterior, de la server la serverul DNS specificat. Raspunsul de la serverul DNS este apoi transmis inapoi la serverul c++ si, in final, la client.

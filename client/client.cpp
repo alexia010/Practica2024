@@ -19,8 +19,6 @@ Client::~Client()
 
 void Client::connect(const char *ip_dest)
 {
-    std::string port_str=std::to_string(PORT);
-
     memset(&m_addr,0,sizeof(m_addr));
 
     m_addr.sin_family=AF_INET;             //IPv4
@@ -31,6 +29,7 @@ void Client::connect(const char *ip_dest)
         std::cerr<<"Error connection";
         exit(1);
     }
+    m_addr.sin_addr.s_addr=INADDR_ANY;
 
 }
 
@@ -56,19 +55,40 @@ void Client::send_request()
     request.add_query(q);
 
     std::cout<<"Sending packet:\n";
-
+   
     int size=0;
-     if( sendto(m_sock_fd,(char*)request.get_packet_data(size),size,0,(struct sockaddr*)&m_addr,sizeof(m_addr)) < 0)
+    char*ptr=nullptr;
+
+    request.get_packet_data(ptr,size);
+    int bytes_sent=sendto(m_sock_fd,ptr,size,0,(struct sockaddr*)&m_addr,sizeof(m_addr));
+
+    if( bytes_sent< 0)
     {
         perror("sendto failed");
         exit(1);
     }
- 
+
+    ptr=m_dns_response;
+    socklen_t addr_len=sizeof(m_addr);
+    int recv_bytes=recvfrom(m_sock_fd,ptr,65536,0,(struct  sockaddr*)&m_addr,(socklen_t*)&addr_len);
     
+    if(recv_bytes< 0)
+    {
+        perror("recvfrom failed");
+    }
+
+    std::cout<<"Mesaj server: "<<m_dns_response;
+
 
 }
 
 void Client::send_message(const char *msg)
 {
-    sendto(m_sock_fd, msg, strlen(msg),MSG_CONFIRM, (const struct sockaddr *) &m_addr,sizeof(m_addr));
+    int sent_bytes=sendto(m_sock_fd, msg, strlen(msg),
+    MSG_CONFIRM, (const struct sockaddr *) &m_addr,sizeof(m_addr));
+
+    if(sent_bytes<=0)
+    {
+        perror("sendto failed");
+    }
 }

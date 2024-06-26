@@ -1,4 +1,5 @@
 #include "client.h"
+#include "CDNS_response.h"
 
 Client::Client():m_port(PORT),m_sock_fd(-1)
 {
@@ -51,6 +52,7 @@ void Client::send_request()
     CDNS_request request;
     request.set_header(1,0,0,0,0,0,0,0,0,0,1,0,0,0);
 
+    int qname_size=hostname.size();
     dns::query*q=new dns::query(hostname,dns::enum_to_int(r_type),1); //1 internet
     request.add_query(q);
 
@@ -77,8 +79,16 @@ void Client::send_request()
         perror("recvfrom failed");
     }
 
-    std::cout<<"Mesaj server: "<<m_dns_response;
+    //std::cout<<"Mesaj server: "<<m_dns_response;
 
+    ptr=m_dns_response;
+    size=0;
+
+   CDNS_response response;
+    response.set_name_size(qname_size);
+    response.get_packet_data(ptr,size);
+
+    response.print_result();
 
 }
 

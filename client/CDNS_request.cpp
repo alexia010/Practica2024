@@ -14,12 +14,12 @@ void CDNS_request::get_packet_data(char*&ptr,int &size)
 {
     static char buffer[65536];  //max dns packet size
 
-    std::memset(buffer, 0, sizeof(buffer));
-   ptr=buffer;
+    memset(buffer, 0, sizeof(buffer));
+    ptr=buffer;
 
     size=0;
 
-    std::memcpy(ptr, header, sizeof(dns::DNS_header));
+    memcpy(ptr, header, sizeof(dns::DNS_header));
     ptr += sizeof(dns::DNS_header);
     size+=sizeof(dns::DNS_header);
 

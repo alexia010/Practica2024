@@ -11,7 +11,7 @@ SRCS_SERVER = server/main_server.cpp server/server.cpp
 HDRS_SERVER = server/server.h
 
 # Define the source files and header files for client
-SRCS_CLIENT = client/main_client.cpp client/client.cpp client/CDNS_request.cpp client/DNS_parts.cpp
+SRCS_CLIENT = client/main_client.cpp client/client.cpp client/CDNS_request.cpp client/DNS_parts.cpp client/CDNS_response.cpp
 HDRS_CLIENT = client/client.h  client/CDNS_request.h client/DNS_parts.h client/IDNS_message.h client/CDNS_response.h
 
 # Define the object files for server and client

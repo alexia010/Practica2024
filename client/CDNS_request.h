@@ -16,10 +16,9 @@ public:
     virtual ~CDNS_request();
 
     void add_query(dns::query*q)override{queries.push_back(q);};
-    void get_packet_data(char*&ptr,int &size)override;
+    virtual void get_packet_data(char*&ptr,int &size)override;
     void set_header( bool rd, bool tc, bool aa, unsigned char opcode, bool qr, unsigned char rcode,
                 bool cd, bool ad, bool z, bool ra, unsigned short q_count, unsigned short ans_count,
                 unsigned short auth_count, unsigned short add_count);
     
-
 };

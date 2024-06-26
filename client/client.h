@@ -7,7 +7,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include "CDNS_request.h"
 
 #define PORT 1234
 
@@ -20,6 +19,7 @@ private:
     struct sockaddr_in m_addr;
 
     char m_dns_response[65536];
+  
 
   
 public:

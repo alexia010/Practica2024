@@ -53,7 +53,7 @@ void Server::bind_sock(int &sock, const sockaddr_in &addr)
 
 void Server::get_dns_servers()
 {
-     std::ifstream p_file("dns_servers.txt");
+    std::ifstream p_file("dns_servers.txt");
     if(!p_file.is_open())
     {
         std::cerr<<"Eroare la deschiderea fisierului\n";
@@ -108,6 +108,7 @@ void Server::query_dns_server(char *&ptr, int &size,const sockaddr_in & client_a
     {
         perror("sendto failed");
     }
+
 }
 
 Server &Server::get_instance()
@@ -142,16 +143,12 @@ void Server::run()
         {
             buffer[recv_bytes] = '\0';
 
-            std::cout << "Client msg: " << buffer << std::endl;
-
             char*ptr=nullptr;
             ptr=buffer;
             int size=recv_bytes;
 
             query_dns_server(ptr,size,client_addr,addr_len);
 
-
-            //sendto(m_sock, buffer, strlen(buffer), 0, (struct sockaddr*)&client_addr, addr_len);
         }
 
     }

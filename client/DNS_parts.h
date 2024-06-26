@@ -53,6 +53,10 @@ namespace dns
         void set_all(bool rd, bool tc, bool aa, unsigned char opcode, bool qr, unsigned char rcode,
                 bool cd, bool ad, bool z, bool ra, unsigned short q_count, unsigned short ans_count,
                 unsigned short auth_count, unsigned short add_count);
+        unsigned short get_q_count()const{return q_count;};
+        unsigned short get_ans_count()const{return ans_count;};
+        unsigned short get_auth_count()const{return auth_count;};
+        unsigned short get_add_count()const{return add_count;};
 
     };
 
@@ -67,8 +71,10 @@ namespace dns
                                     //                                          3 - Chaosnet  etc
     public:
         question():q_type(0),q_class(0){};
+
         void set_all(unsigned short q_type, unsigned short q_class);
         void get_data(char*ptr,int&size);
+        void populate_question(char*&ptr);
     };
 
     #pragma pack(push,1);   //evitare padding
@@ -76,10 +82,15 @@ namespace dns
     class r_data
     {
         unsigned short type;
-        unsigned short _class;     
+        unsigned short _class;    
+        unsigned int ttl; 
         unsigned short data_len;
     public:
         r_data():type(0),_class(0),data_len(0){};
+        void populate_rdata(char*&ptr);
+
+        unsigned short get_type()const{return type;};
+        unsigned short get_data_len()const{return data_len;};
     };
 
     #pragma pack(pop);
@@ -91,6 +102,18 @@ namespace dns
         r_data *resource;
     public:
         resource_record():resource(nullptr){};
+        std::string read_domain_name(char*&ptr);
+
+        void populate_record(char*&ptr);
+        void populate_record2(char*&ptr);
+
+        void set_name(std::string t_name){name=t_name;};
+        void set_rdata(std::string t_rdata){rdata=t_rdata;};
+
+        unsigned short get_resource_type()const{return resource->get_type();};
+        std::string get_name()const{return name;};
+        std::string get_rdata()const{return rdata;};
+        ~resource_record();
     };
 
     class query
@@ -103,6 +126,7 @@ namespace dns
         query():qst(nullptr){};
         query(std::string name,unsigned short q_type, unsigned short q_class);
         void set_domain_name(std::string name);
+        void populate_query(char*&ptr,int qname_size);
         void set_question( unsigned short q_type,unsigned short q_class);
         void get_data(char*ptr,int &size);
         ~query();

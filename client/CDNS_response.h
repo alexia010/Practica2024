@@ -8,11 +8,11 @@ private:
     std::vector<dns::resource_record*>m_authorities;
     std::vector<dns::resource_record*>m_additionals;
 
-    void populate_header(char*&ptr);
-    void populate_queries(char*&ptr);
-    void populate_answers(char*&ptr);
-    void populate_authorities(char*&ptr);
-    void populate_additionals(char*&ptr);
+    void populate_header(unsigned char*&ptr);
+    void populate_queries(unsigned char*&ptr);
+    void populate_answers(unsigned char*&ptr,unsigned char*&response);
+    void populate_authorities(unsigned char *&ptr,unsigned char*&response);
+    void populate_additionals(unsigned char *&ptr,unsigned char*&response);
 
     void print_answers();
     void print_answear_by_type(dns::resource_record*ans);
@@ -23,7 +23,7 @@ private:
     int m_qname_size;
 public:
 
-    void get_packet_data(char*&ptr,int &size)override;
+    void populate_response(unsigned char*&ptr,unsigned char*&response);
     void set_name_size(int size){m_qname_size=size;};
     void print_result();
 

@@ -42,11 +42,11 @@ void dns::DNS_header::set_all( bool rd, bool tc, bool aa, unsigned char opcode, 
 
 void dns::question::set_all(unsigned short q_type, unsigned short q_class)
 {
-    this->q_type=q_type;
+    this->q_type=htons(q_type);
     this->q_class=htons(q_class);
 }
 
-void dns::question::get_data(char *ptr, int &size)
+void dns::question::get_data(unsigned char *ptr, int &size)
 {
     std::memcpy(ptr,&q_type,sizeof(q_type));
     size+=sizeof(q_type);
@@ -57,7 +57,7 @@ void dns::question::get_data(char *ptr, int &size)
 
 }
 
-void dns::question::populate_question(char *&ptr)
+void dns::question::populate_question(unsigned char *&ptr)
 {
     memcpy(&q_type,ptr,sizeof(q_type));
     ptr+=sizeof(q_type);
@@ -69,6 +69,33 @@ void dns::print_record_type()
 {
     std::cout<<"A\tNS\tCNAME\tSOA\tPTR\tMX\n";
 }
+
+char dns::print_dns_server_options(std::map<std::string, std::string> dns_servers)
+{
+    int index=1;
+
+    for(auto pair:dns_servers)
+    {
+        std::cout<<index<<".\t"<<pair.first<<"\n";
+        index++;
+    }
+
+     std::cout << "Enter the digit corresponding to the DNS server you choose: ";
+
+    char digit;
+    std::cin>>digit;
+
+    index+=48;
+
+    while(digit<49&&digit>=index)
+    {
+        std::cout<<"Invalid digit.Re-enter the digit:";
+        std::cin>>digit;
+    }
+
+    return digit;
+}
+
 
 dns::dns_record_type dns::get_record_type(std::string t_type)
 {
@@ -145,9 +172,9 @@ void dns::query::set_domain_name(std::string name)
     change_to_dns_name_format();
 }
 
-void dns::query::populate_query(char *&ptr, int qname_size)
+void dns::query::populate_query(unsigned char *&ptr, int qname_size)
 {
-    domain_name.assign(ptr,qname_size+1);
+    domain_name.assign((char*)ptr,qname_size+1);
     ptr+=qname_size+1;
 
     qst=new dns::question;
@@ -164,7 +191,7 @@ void dns::query::set_question(unsigned short q_type, unsigned short q_class)
     qst->set_all(q_type,q_class);
 }
 
-void dns::query::get_data(char* ptr,int &size)
+void dns::query::get_data(unsigned char* ptr,int &size)
 {
     std::memcpy(ptr,domain_name.c_str(),domain_name.size()+1);
     size+=domain_name.size()+1;
@@ -185,56 +212,93 @@ dns::query::~query()
 //                     ------------------------------         ------------
 //pointer compresie : |     11       |      000010   |      |   offset     | 
 //                     ------------------------------        -------------   
-//                    ptr. compresie     prt. sup. offset
+//                    ptr. compresie    part. sup. offset
 
-std::string dns::resource_record::read_domain_name(char*&ptr)
+std::string dns::resource_record::read_domain_name(unsigned char*ptr,unsigned char*&response)
 {
-    std::string name_aux;
+    // std::string name_aux;
+    // int offset;
+    // bool jumped=0;
+    // while(*ptr!=0)
+    // {
+    //     std::cout<<*ptr;
+    //     if(*ptr>=0xC0)   //pointer de compresie
+    //     {
+    //         offset=((*ptr & 63)<<8)|*(ptr+1);
+    //         ptr=response+offset;
+    //         jumped=1; 
+    //         count+=2;
+    //     }
+    //     else
+    //     {
+    //         int len=*ptr;
+    //         ptr++;
+    //         for(int i=0;i<len;i++)
+    //         {
+    //             name_aux+=*ptr;
+    //             ptr++;
+    //         }
+    //         name_aux+='.';
+    //     }
+    // }
+    // name_aux.pop_back();    
+    // return name_aux;
+
+     std::string name_aux;
+    int p = 0;
+    bool jumped = false;
     int offset;
-    bool jumped=0;
+    int i, j;
 
-    char* original_ptr=ptr;
+    count = 1; 
 
-    while(*ptr!=0)
+    while (*ptr != 0)
     {
-        if(*ptr>=0xC0)   //pointer de compresie
+        if ((*ptr & 0xC0) == 0xC0)   
         {
-            offset=((*ptr & 63)<<8)|*(ptr+1);
-            ptr=original_ptr+offset;
-            jumped=1;
-            
+            offset = ((*ptr & 0x3F) << 8) | *(ptr + 1);
+            ptr = response + offset-1;
+            jumped = true; 
         }
         else
         {
-            int len=*ptr;
-            ptr++;
-
-            for(int i=0;i<len;i++)
-            {
-                name_aux+=*ptr;
-                ptr++;
-            }
-
-            name_aux+='.';
+            name_aux += *ptr;
+            p++;
         }
 
+        ptr = ptr + 1;
 
-        if(!jumped)
+        if (!jumped)
         {
-            ptr++;
-        }
-        else
-        {
-            jumped=false;
+            count++; 
         }
     }
 
-    name_aux.pop_back();    
+    if (jumped)
+    {
+        count++; 
+
+    for (i = 0; i < p; i++)
+    {
+        int len = name_aux[i];
+        for (j = 0; j < len; j++)
+        {
+            name_aux[i] = name_aux[i + 1];
+            i++;
+        }
+        name_aux[i] = '.';
+    }
+
+    if (!name_aux.empty())
+    {
+        name_aux.pop_back();
+    }
 
     return name_aux;
+    }
 }
 
-void dns::resource_record::populate_record(char *&ptr)
+void dns::resource_record::populate_record_answear(unsigned char *&ptr, unsigned char *&response)
 {
     if(resource==nullptr)
     {
@@ -243,25 +307,36 @@ void dns::resource_record::populate_record(char *&ptr)
 
     resource->populate_rdata(ptr);
    
-    if(resource->get_type()==1)
+    if(ntohs(resource->get_type())==1)
     {
-        name.assign(ptr,resource->get_data_len());
-        ptr=ptr+=resource->get_data_len();
+        rdata.assign((char*)ptr,ntohs(resource->get_data_len()));
+        ptr=ptr+ntohs(resource->get_data_len());
     }
     else
     {
-        rdata=read_domain_name(ptr);
+       rdata=read_domain_name(ptr,response);
+       ptr+=count;
     }
 
 }
 
-void dns::resource_record::populate_record2(char *&ptr)
+void dns::resource_record::populate_record(unsigned char *&ptr, unsigned char *&response)
+{
+    if(resource==nullptr)
+    {
+        resource=new dns::r_data;
+    }
+
+    resource->populate_rdata(ptr);
+    rdata=read_domain_name(ptr,response);
+    ptr+=count;
+}
+
+void dns::resource_record::populate_record2(unsigned char *&ptr)
 {
     resource=(r_data*)(ptr);
     ptr+=sizeof(r_data);
 }
-
-
 
 dns::resource_record::~resource_record()
 {
@@ -271,28 +346,27 @@ dns::resource_record::~resource_record()
         resource=nullptr;
     }
 
-  
 }
 
-void dns::r_data::populate_rdata(char *&ptr)
+void dns::r_data::populate_rdata(unsigned char *&ptr)
 {
     unsigned short value;
 
     memcpy(&value, ptr, sizeof(unsigned short));
-    type = ntohs(value);
+    type=value;
     ptr += sizeof(unsigned short);
 
     memcpy(&value, ptr, sizeof(unsigned short));
-    _class = ntohs(value);
+    _class=value;
     ptr += sizeof(unsigned short);
 
     int value2;
 
     memcpy(&value2, ptr, sizeof(int));
-    ttl = ntohs(value2);
+    ttl=value2;
     ptr += sizeof(int);
 
     memcpy(&value, ptr, sizeof(unsigned short));
-   data_len = ntohs(value);
+    data_len=value;
     ptr += sizeof(unsigned short);
 }

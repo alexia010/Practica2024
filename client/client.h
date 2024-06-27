@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <map>
 
 #define PORT 1234
 
@@ -18,8 +19,10 @@ private:
     int m_sock_fd;
     struct sockaddr_in m_addr;
 
-    char m_dns_response[65536];
-  
+    unsigned char m_dns_response[65536];
+
+    void print_current_time();
+    void print_stats(int t_time,int rsp_size);
 
   
 public:
@@ -28,6 +31,4 @@ public:
 
     void connect(const char*ip_dest);
     void send_request();
-
-    void send_message(const char*msg);
 };

@@ -57,3 +57,7 @@ Am renuntat la utilizarea serverelor DNS locale, stocate in cadrul fisierului /e
 ## 26.06.2024
 
 Am recompus informatiile din pachetele DNS primite de la aplicatia server, utilizand o instanta de tip DNS_response. Fiecarui element i-au fost atribuite datele necesare, iar in cazul numelui de domeniu a fost nevoie sa tin cont de prezenta pointerilor de compresie.In pachetele DNS, numele de domenii sunt stocate folosind pointeri de compresie pentru a economisi spatiu. Pointerii de compresie sunt indicati de un octet cu valoarea intre 192 si 255, care indica faptul ca restul valorii reprezinta un offset in pachet unde incepe numele decomprimat. Functia *read_domain_name* citeste numele de domeniu dintr-un buffer, detectand si urmarind pointerii de compresie pentru a reconstrui numele complet. Daca intalneste un pointer de compresie, functia se muta la pozitia indicata de offset pentru a continua citirea. Numele citit este apoi convertit din formatul compactat (3www6google3com) in formatul normal (www.google.com).
+
+## 27.06.2024
+
+Finalizarea aplicatiei.

@@ -46,6 +46,7 @@ private:
    void add_dns_server_in_map(std::string line);
     void query_dns_server(char*&ptr,int &size,const sockaddr_in & client_addr,const socklen_t & addr_len);
 
+
 public:
     static Server&get_instance();
     static void destroy_instance();

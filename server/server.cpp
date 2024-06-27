@@ -1,4 +1,5 @@
 #include "server.h"
+#include <chrono>
 
 
 Server*Server::m_ptr=nullptr;
@@ -59,6 +60,7 @@ void Server::get_dns_servers()
         std::cerr<<"Eroare la deschiderea fisierului\n";
         exit(1);
     }
+
     std::string line;
     while(getline(p_file,line))
     {
@@ -83,15 +85,12 @@ void Server::add_dns_server_in_map(std::string line)
 
 void Server::query_dns_server(char *&ptr, int &size,const sockaddr_in & client_addr,const socklen_t & addr_len)
 {
+
     int sent_bytes=sendto(m_dns_sock,ptr,size,0,(struct sockaddr*)&m_dns_addr,sizeof(m_dns_addr));
     if(sent_bytes < 0)
     {
         perror("sendto failed");
     }
-    
-    std::cout<<"Query sent to dns server...\n";
-    
-    std::cout<<"Receiving answear...\n";
 
     socklen_t len=sizeof(m_addr);
     int recv_bytes=recvfrom (m_dns_sock,(char*)m_dns_response, 65536 , 0 , (struct sockaddr*)&m_dns_addr , &len );
@@ -99,6 +98,7 @@ void Server::query_dns_server(char *&ptr, int &size,const sockaddr_in & client_a
     {
         perror("recvfrom failed");
     }
+  
 
     ptr=m_dns_response;
 
@@ -108,8 +108,9 @@ void Server::query_dns_server(char *&ptr, int &size,const sockaddr_in & client_a
     {
         perror("sendto failed");
     }
-
 }
+
+
 
 Server &Server::get_instance()
 {

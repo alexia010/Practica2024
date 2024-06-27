@@ -1,7 +1,30 @@
 #include "client.h"
 #include "CDNS_response.h"
+#include <fstream>
 
-Client::Client():m_port(PORT),m_sock_fd(-1)
+#include <ctime>
+#include <iomanip>
+#include <chrono>
+
+void Client::print_current_time()
+{
+    time_t now=time(nullptr);
+    tm*tm_now=localtime(&now);
+
+    std::cout<<std::put_time(tm_now,"%a %b %d %H:%M:%S %Z %Y")<<"\n";
+}
+
+void Client::print_stats(int t_time, int rsp_size)
+{
+    std::cout<<"****STATS:\n";
+    std::cout<<"Total query time: "<<t_time<<"\n";
+    std::cout<<"Date: ";
+    print_current_time();
+    std::cout<<"DNS response size: "<<rsp_size<<"bytes\n";
+
+}
+
+Client::Client() : m_port(PORT), m_sock_fd(-1)
 {
     m_sock_fd=socket(AF_INET,SOCK_DGRAM,0);
 
@@ -34,6 +57,7 @@ void Client::connect(const char *ip_dest)
 
 }
 
+
 void Client::send_request()
 {
     std::cout<<"Enter hostname to lookup: ";
@@ -49,6 +73,9 @@ void Client::send_request()
 
     dns::dns_record_type r_type=dns::check_type(type);
 
+    auto start_time=std::chrono::high_resolution_clock::now();
+
+    std::cout<<"\n\n**** QUESTION SECTION:\n"<<hostname<<"\t\t"<<"IN\t\t"<<type<<"\n\n";
     CDNS_request request;
     request.set_header(1,0,0,0,0,0,0,0,0,0,1,0,0,0);
 
@@ -56,10 +83,10 @@ void Client::send_request()
     dns::query*q=new dns::query(hostname,dns::enum_to_int(r_type),1); //1 internet
     request.add_query(q);
 
-    std::cout<<"Sending packet:\n";
+    std::cout<<"\n";
    
     int size=0;
-    char*ptr=nullptr;
+    unsigned char*ptr=nullptr;
 
     request.get_packet_data(ptr,size);
     int bytes_sent=sendto(m_sock_fd,ptr,size,0,(struct sockaddr*)&m_addr,sizeof(m_addr));
@@ -72,33 +99,28 @@ void Client::send_request()
 
     ptr=m_dns_response;
     socklen_t addr_len=sizeof(m_addr);
-    int recv_bytes=recvfrom(m_sock_fd,ptr,65536,0,(struct  sockaddr*)&m_addr,(socklen_t*)&addr_len);
+    int recv_bytes_dns=recvfrom(m_sock_fd,ptr,65536,0,(struct  sockaddr*)&m_addr,(socklen_t*)&addr_len);
     
-    if(recv_bytes< 0)
+    if(recv_bytes_dns< 0)
     {
         perror("recvfrom failed");
     }
 
-    //std::cout<<"Mesaj server: "<<m_dns_response;
 
     ptr=m_dns_response;
     size=0;
 
-   CDNS_response response;
+    unsigned char*rsp=m_dns_response;
+
+    CDNS_response response;
     response.set_name_size(qname_size);
-    response.get_packet_data(ptr,size);
+    response.populate_response(ptr,rsp);
+
+    auto end_time=std::chrono::high_resolution_clock::now();
+    auto total_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
     response.print_result();
+    print_stats(total_time.count(),recv_bytes_dns);
 
 }
 
-void Client::send_message(const char *msg)
-{
-    int sent_bytes=sendto(m_sock_fd, msg, strlen(msg),
-    MSG_CONFIRM, (const struct sockaddr *) &m_addr,sizeof(m_addr));
-
-    if(sent_bytes<=0)
-    {
-        perror("sendto failed");
-    }
-}

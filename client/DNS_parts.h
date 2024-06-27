@@ -4,6 +4,8 @@
 #include <string>
 #include <unistd.h>     //getpid()
 #include <arpa/inet.h>  //htons
+#include <map>
+#include <string>
 
 namespace dns
 {
@@ -18,6 +20,7 @@ namespace dns
     } ;
 
     void print_record_type();
+    char print_dns_server_options(std::map<std::string,std::string>dns_servers);
     dns_record_type get_record_type(std::string t_type);
     dns_record_type check_type(std::string type);
     inline int enum_to_int(const dns_record_type &type){return static_cast<int>(type);};
@@ -73,8 +76,8 @@ namespace dns
         question():q_type(0),q_class(0){};
 
         void set_all(unsigned short q_type, unsigned short q_class);
-        void get_data(char*ptr,int&size);
-        void populate_question(char*&ptr);
+        void get_data (unsigned char*ptr,int&size);
+        void populate_question(unsigned char*&ptr);
     };
 
     #pragma pack(push,1);   //evitare padding
@@ -87,7 +90,7 @@ namespace dns
         unsigned short data_len;
     public:
         r_data():type(0),_class(0),data_len(0){};
-        void populate_rdata(char*&ptr);
+        void populate_rdata(unsigned char*&ptr);
 
         unsigned short get_type()const{return type;};
         unsigned short get_data_len()const{return data_len;};
@@ -100,12 +103,15 @@ namespace dns
         std::string name;
         std::string rdata;
         r_data *resource;
-    public:
-        resource_record():resource(nullptr){};
-        std::string read_domain_name(char*&ptr);
 
-        void populate_record(char*&ptr);
-        void populate_record2(char*&ptr);
+        int count;
+    public:
+        resource_record():resource(nullptr),count(0){};
+        std::string read_domain_name(unsigned char*ptr,unsigned char*&response);
+
+        void populate_record_answear(unsigned char*&ptr,unsigned char*&response);
+        void populate_record(unsigned char*&ptr,unsigned char*&response);
+        void populate_record2(unsigned char*&ptr);
 
         void set_name(std::string t_name){name=t_name;};
         void set_rdata(std::string t_rdata){rdata=t_rdata;};
@@ -113,6 +119,7 @@ namespace dns
         unsigned short get_resource_type()const{return resource->get_type();};
         std::string get_name()const{return name;};
         std::string get_rdata()const{return rdata;};
+        int get_count()const{return count;};
         ~resource_record();
     };
 
@@ -126,9 +133,9 @@ namespace dns
         query():qst(nullptr){};
         query(std::string name,unsigned short q_type, unsigned short q_class);
         void set_domain_name(std::string name);
-        void populate_query(char*&ptr,int qname_size);
+        void populate_query(unsigned char*&ptr,int qname_size);
         void set_question( unsigned short q_type,unsigned short q_class);
-        void get_data(char*ptr,int &size);
+        void get_data(unsigned char*ptr,int &size);
         ~query();
     
     };
